@@ -1,554 +1,312 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HUNTER STREAM</title>
-
-  <!--
-    HUNTER STREAM — Single-file frontend
-    - Uses base API: https://movieapi.giftedtech.co.ke/
-    - Assumptions (edit if your API differs):
-        GET  /movies?page=1            -> returns { data: [ ...movieCards ] }
-        GET  /movies/:id               -> returns { id, title, description, poster, stream_url, genres, year, rating }
-        GET  /search?q=...             -> returns { data: [ ... ] }
-    - If your API uses different endpoints or an API key, update `API_BASE` and the fetch URLs below.
-    - If CORS errors appear, you may need to run a simple proxy on your server to call the API server-side.
-  -->
-
   <style>
-    /* Unique, modern aesthetic: dark glass + neon accents + fluid layout */
-    :root{
-      --bg:#08101a;
-      --card:#0f1b24;
-      --muted:#95a1ad;
-      --accent:#00f5ff;
-      --accent-2:#7b61ff;
-      --glass: rgba(255,255,255,0.04);
-      --glass-2: rgba(255,255,255,0.02);
-      --radius: 18px;
-      --gutter: 18px;
-      --max-width:1200px;
+    :root {
+      --bg: #0a0f15;
+      --card-bg: #11202b;
+      --text: #e2e8f0;
+      --muted: #7a8a9e;
+      --accent: #08d9d6;
+      --radius: 16px;
+      --gutter: 16px;
     }
-
-    html,body{
-      height:100%;
-      margin:0;
-      background:
-        radial-gradient(800px 400px at 10% 10%, rgba(123,97,255,0.08), transparent 8%),
-        radial-gradient(700px 350px at 90% 90%, rgba(0,245,255,0.04), transparent 8%),
-        linear-gradient(180deg,#021018 0%, #04131a 100%);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      color:#e8f0f2;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      padding:28px 20px;
-      box-sizing:border-box;
+    body {
+      margin: 0;
+      padding: var(--gutter);
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Roboto, sans-serif;
     }
-
-    .app{
-      max-width:var(--max-width);
-      margin:0 auto;
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--gutter);
     }
-
-    /* Header */
-    header{
-      display:flex;
-      align-items:center;
-      gap:18px;
-      margin-bottom:18px;
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+      color: var(--accent);
     }
-    .logo{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:10px 16px;
-      background:linear-gradient(135deg,var(--glass), rgba(255,255,255,0.03));
-      border-radius:28px;
-      box-shadow: 0 6px 18px rgba(2,8,12,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
-      backdrop-filter: blur(8px) saturate(120%);
+    .search-bar {
+      display: flex;
+      align-items: center;
     }
-    .logo .mark{
-      height:44px;
-      width:44px;
-      border-radius:10px;
-      background: conic-gradient(from 200deg at 50% 50%, var(--accent), var(--accent-2));
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:700;
-      color:#021017;
-      box-shadow: 0 6px 18px rgba(123,97,255,0.13);
-      transform: rotate(-8deg);
-      font-family: ui-rounded, "Segoe UI", sans-serif;
+    .search-bar input {
+      padding: 8px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: var(--radius);
+      background: #1f2e3d;
+      color: var(--text);
+      outline: none;
+      width: 200px;
     }
-    .logo h1{
-      font-size:18px;
-      letter-spacing:1px;
-      margin:0;
-      line-height:1;
+    .search-bar button {
+      margin-left: 8px;
+      padding: 8px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: var(--radius);
+      background: var(--accent);
+      color: #0a0f15;
+      cursor: pointer;
     }
-    .logo p{ margin:0; font-size:11px; color:var(--muted); margin-top:3px;}
-
-    /* Search and controls */
-    .controls{
-      display:flex;
-      gap:12px;
-      margin-left:auto;
-      align-items:center;
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: var(--gutter);
     }
-    .search{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      background: linear-gradient(180deg, var(--glass), var(--glass-2));
-      padding:8px 12px;
-      border-radius:999px;
-      width:320px;
-      box-shadow: 0 6px 16px rgba(2,8,12,0.5);
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease;
     }
-    .search input{
-      background:transparent;
-      border:0;
-      outline:0;
-      color:inherit;
-      width:100%;
-      font-size:14px;
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     }
-    .btn{
-      border:0;
-      padding:8px 12px;
-      border-radius:12px;
-      background: linear-gradient(90deg,var(--accent),var(--accent-2));
-      color:#021017;
-      font-weight:700;
-      cursor:pointer;
-      box-shadow: 0 10px 30px rgba(123,97,255,0.12);
-      transition: transform .14s ease;
+    .card img {
+      width: 100%;
+      display: block;
     }
-    .btn:active{ transform: translateY(1px) scale(.997); }
-
-    /* Hero */
-    .hero{
-      display:flex;
-      gap:20px;
-      margin:18px 0 26px;
-      align-items:center;
+    .card .info {
+      padding: 12px;
     }
-    .hero .featured{
-      flex:1;
-      min-height:180px;
-      border-radius:20px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      padding:18px;
-      display:flex;
-      gap:18px;
-      align-items:center;
-      box-shadow: 0 12px 32px rgba(2,8,12,0.5);
-      overflow:hidden;
-      position:relative;
+    .card .info h2 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      color: var(--text);
     }
-    .featured .poster{
-      min-width:170px;
-      height:240px;
-      border-radius:12px;
-      overflow:hidden;
-      box-shadow: 0 8px 28px rgba(2,8,12,.6);
-      flex-shrink:0;
-      background-size:cover;
-      background-position:center;
-      border: 1px solid rgba(255,255,255,0.03);
+    .card .info p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
     }
-    .featured .meta{
-      color:var(--muted);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--gutter);
+      z-index: 1000;
     }
-    .featured h2{ margin:0; font-size:20px; color:#fff;}
-    .featured p{ margin:0; font-size:14px; line-height:1.45; max-width:65ch; color:var(--muted); }
-
-    /* Grid */
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
-      gap:16px;
-      margin-top:6px;
+    .modal.open {
+      display: flex;
     }
-    .card{
-      background:linear-gradient(180deg,var(--card), rgba(255,255,255,0.01));
-      border-radius:14px;
-      overflow:hidden;
-      position:relative;
-      cursor:pointer;
-      transition: transform .18s cubic-bezier(.16,.85,.24,1), box-shadow .18s;
-      box-shadow: 0 8px 24px rgba(2,8,12,0.45);
-      min-height:260px;
-      display:flex;
-      flex-direction:column;
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 900px;
+      overflow: hidden;
     }
-    .card:hover{
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: 0 22px 48px rgba(2,8,12,0.6);
+    .modal-content .video-container {
+      position: relative;
+      width: 100%;
+      background: black;
     }
-    .card .thumb{
-      height:220px;
-      background-size:cover;
-      background-position:center;
-      flex-shrink:0;
+    .modal-content video {
+      width: 100%;
+      height: auto;
+      display: block;
     }
-    .card .info{
-      padding:10px 12px;
-      display:flex;
-      gap:8px;
-      align-items:center;
-      justify-content:space-between;
+    .modal-content .details {
+      padding: var(--gutter);
     }
-    .info .title{
-      font-size:13px;
-      font-weight:600;
-      color:#fff;
-      line-height:1.1;
+    .modal-content .details h2 {
+      margin: 0 0 12px 0;
     }
-    .info .sub{
-      font-size:12px;
-      color:var(--muted);
+    .modal-content .details p {
+      margin: 8px 0;
+      color: var(--muted);
+      font-size: 14px;
     }
-
-    /* Modal player */
-    .modal{
-      position:fixed;
-      inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:1200;
-      background:linear-gradient(180deg, rgba(2,3,5,.6), rgba(2,3,5,.8));
-      padding:28px;
+    .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: var(--text);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: var(--radius/2);
     }
-    .modal.open{ display:flex; }
-    .player{
-      max-width:1000px;
-      width:100%;
-      background:linear-gradient(180deg,#06141b, rgba(255,255,255,0.02));
-      border-radius:14px;
-      overflow:hidden;
-      box-shadow:0 30px 80px rgba(2,8,12,0.8);
+    @media (max-width: 600px) {
+      .search-bar input {
+        width: 120px;
+      }
+      header h1 {
+        font-size: 20px;
+      }
     }
-    .player .video-wrap{
-      position:relative;
-      background:#000;
-    }
-    video{
-      width:100%;
-      height:auto;
-      display:block;
-      background:#000;
-    }
-    .player .meta{
-      padding:16px;
-      display:flex;
-      gap:16px;
-      align-items:center;
-    }
-    .close{
-      position:absolute;
-      right:12px;
-      top:12px;
-      background:rgba(0,0,0,0.35);
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,0.02);
-      padding:8px;
-      color:#fff;
-      cursor:pointer;
-    }
-
-    /* small screens */
-    @media (max-width:720px){
-      .search{ width:180px;}
-      .logo h1{ font-size:15px;}
-      .featured .poster{ display:none; }
-      .hero{ flex-direction:column; align-items:stretch;}
-      .grid{ grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); }
-      .card{ min-height:230px; }
-    }
-
-    /* loading placeholder */
-    .skeleton{
-      background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-      animation: shimmer 1.4s infinite linear;
-    }
-    @keyframes shimmer { from{ background-position:-200px 0 } to{ background-position:200px 0 } }
-
-    /* small helper */
-    .muted{ color:var(--muted); font-size:13px; }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <div class="logo" title="Hunter Stream">
-        <div class="mark">HS</div>
-        <div>
-          <h1>HUNTER STREAM</h1>
-          <p>Fast. Clean. Cinematic.</p>
-        </div>
-      </div>
 
-      <div class="controls">
-        <div class="search" role="search">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="opacity:.8"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <input id="searchInput" placeholder="Search movies, actors, genres..." aria-label="Search movies...">
-        </div>
-        <button id="searchBtn" class="btn">Search</button>
-      </div>
-    </header>
+  <header>
+    <h1>HUNTER STREAM</h1>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search movies..." />
+      <button id="searchBtn">Search</button>
+    </div>
+  </header>
 
-    <main>
-      <section class="hero">
-        <div class="featured" id="featured">
-          <!-- will be injected by JS -->
-          <div style="display:flex;flex:1;align-items:center;justify-content:center" class="skeleton" id="featSkeleton">
-            <div style="height:140px;width:100%;max-width:640px;border-radius:10px"></div>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-          <h3 style="margin:0">Trending</h3>
-          <span class="muted">— popular right now</span>
-        </div>
-
-        <div class="grid" id="grid">
-          <!-- movie cards injected here -->
-        </div>
-
-        <div style="display:flex;justify-content:center;margin-top:18px">
-          <button id="loadMore" class="btn">Load more</button>
-        </div>
-      </section>
-    </main>
+  <div id="movieGrid" class="grid"></div>
+  <div style="text-align:center; margin: 24px 0;">
+    <button id="loadMoreBtn" style="padding:8px 16px;border:none;border-radius:var(--radius);background:var(--accent);color:#0a0f15;cursor:pointer;">Load More</button>
   </div>
 
-  <!-- modal player -->
-  <div class="modal" id="modal" role="dialog" aria-modal="true">
-    <div class="player" role="document">
-      <div class="video-wrap">
-        <button class="close" id="closeBtn" title="Close player">✕</button>
-        <video id="video" controls playsinline preload="metadata"></video>
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeModalBtn">&times;</button>
+      <div class="video-container">
+        <video id="videoPlayer" controls></video>
       </div>
-      <div class="meta" id="playerMeta">
-        <!-- meta injected -->
-      </div>
+      <div class="details" id="movieDetails"></div>
     </div>
   </div>
 
   <script>
-    // ---------- Configuration ----------
-    const API_BASE = 'https://movieapi.giftedtech.co.ke'; // change if your API root differs
-    // Examples of endpoints used in this UI (edit if your API is different):
-    // - GET `${API_BASE}/movies?page=1`
-    // - GET `${API_BASE}/movies/{id}`
-    // - GET `${API_BASE}/search?q=term`
-    // If your API requires an API key in headers or querystring, append it here:
-    // const API_KEY = 'YOUR_KEY_HERE';
-
-    // ---------- Utility ----------
-    const $ = q => document.querySelector(q);
-    const grid = $('#grid');
-    const featuredEl = $('#featured');
-    const searchInput = $('#searchInput');
-    const searchBtn = $('#searchBtn');
-    const loadMoreBtn = $('#loadMore');
-    const modal = $('#modal');
-    const videoEl = $('#video');
-    const playerMeta = $('#playerMeta');
-    const closeBtn = $('#closeBtn');
-
+    const API_BASE = 'https://movieapi.giftedtech.co.ke';
     let page = 1;
     let loading = false;
-    let featuredMovie = null;
 
-    // Fetch helper with error handling
-    async function apiGet(path) {
-      try {
-        const res = await fetch(path, {
-          // headers: { 'Authorization': `Bearer ${API_KEY}` } // if needed
-        });
-        if (!res.ok) throw new Error('Network response was not ok: ' + res.status);
-        return await res.json();
-      } catch (err) {
-        console.error('API fetch error', err);
-        throw err;
-      }
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const movieGrid = document.getElementById('movieGrid');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const modal = document.getElementById('modal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const movieDetails = document.getElementById('movieDetails');
+
+    async function fetchMovies(pageNum = 1) {
+      const resp = await fetch(`${API_BASE}/movies?page=${pageNum}`);
+      if (!resp.ok) throw new Error('Failed to fetch movies');
+      const json = await resp.json();
+      return Array.isArray(json) ? json : (json.data || []);
     }
 
-    // Render a single card
-    function renderCard(m) {
-      // m expected fields: id, title, poster (url), year, rating
-      const el = document.createElement('article');
-      el.className = 'card';
-      el.innerHTML = `
-        <div class="thumb" style="background-image:url('${m.poster || m.thumbnail || 'https://via.placeholder.com/400x600?text=No+Image'}')"></div>
+    async function fetchMovieDetail(id) {
+      const resp = await fetch(`${API_BASE}/movies/${encodeURIComponent(id)}`);
+      if (!resp.ok) throw new Error('Failed to fetch movie detail');
+      const json = await resp.json();
+      // If wrapper object: return json.data or similar
+      return json;
+    }
+
+    function createCard(movie) {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.innerHTML = `
+        <img src="${movie.poster || movie.thumbnail || ''}" alt="${movie.title || movie.name}" />
         <div class="info">
-          <div>
-            <div class="title">${escapeHtml(m.title || m.name || 'Untitled')}</div>
-            <div class="sub">${escapeHtml(m.year || m.release_year || '')} • ${escapeHtml(m.rating || '')}</div>
-          </div>
-          <div>
-            <button class="btn play" data-id="${m.id}">Play</button>
-          </div>
+          <h2>${movie.title || movie.name || 'Untitled'}</h2>
+          <p>${movie.year || movie.release_year || ''} | Rating: ${movie.rating || '-'}</p>
         </div>
       `;
-      // click card -> view details
-      el.querySelector('.play').addEventListener('click', (e) => {
-        const id = e.currentTarget.dataset.id;
-        openPlayer(id);
-      });
-      return el;
+      div.addEventListener('click', () => openModal(movie.id));
+      return div;
     }
 
-    // Escape helper
-    function escapeHtml(str='') {
-      return String(str).replace(/[&<>"']/g, (s) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
-    }
-
-    // Load movies (trending/general)
-    async function loadMovies() {
+    async function loadMovies(reset = false) {
       if (loading) return;
       loading = true;
-      loadMoreBtn.disabled = true;
+      if (reset) {
+        page = 1;
+        movieGrid.innerHTML = '';
+      }
       try {
-        // Try common endpoint patterns. If your API returns differently, change here.
-        const url = `${API_BASE}/movies?page=${page}`;
-        const data = await apiGet(url);
-        // shape: either { data: [..] } or an array
-        const items = Array.isArray(data) ? data : (data.data || data.results || []);
-        if (!items.length && page === 1) {
-          grid.innerHTML = '<div class="muted">No movies found.</div>';
-          return;
-        }
-        items.forEach(item => grid.appendChild(renderCard(item)));
-        // set featured if first load
-        if (page === 1 && items.length) {
-          featuredMovie = items[0];
-          renderFeatured(items[0]);
-        }
+        const movies = await fetchMovies(page);
+        movies.forEach(m => movieGrid.appendChild(createCard(m)));
         page++;
       } catch (err) {
         console.error(err);
-        if (page === 1) grid.innerHTML = `<div class="muted">Failed to load movies. Check console for error or CORS / API path.</div>`;
+        if (page === 1) {
+          movieGrid.innerHTML = '<p style="color:#f88;">Error loading movies.</p>';
+        }
       } finally {
         loading = false;
-        loadMoreBtn.disabled = false;
       }
     }
 
-    // Search
-    async function search(q) {
-      if (!q) return;
-      grid.innerHTML = ''; page = 1; // reset load more logic
+    async function openModal(movieId) {
       try {
-        const url = `${API_BASE}/search?q=${encodeURIComponent(q)}`;
-        const data = await apiGet(url);
-        const items = Array.isArray(data) ? data : (data.data || data.results || []);
-        if (!items.length) { grid.innerHTML = '<div class="muted">No results.</div>'; return; }
-        items.forEach(item => grid.appendChild(renderCard(item)));
-        featuredMovie = items[0];
-        renderFeatured(items[0]);
-      } catch (err) {
-        grid.innerHTML = `<div class="muted">Search failed: ${err.message}</div>`;
-      }
-    }
-
-    // Render featured area
-    function renderFeatured(m) {
-      featuredEl.innerHTML = `
-        <div class="poster" style="background-image:url('${m.poster || m.thumbnail || 'https://via.placeholder.com/500x750?text=No+Image'}')"></div>
-        <div class="meta">
-          <h2>${escapeHtml(m.title || m.name || 'Untitled')}</h2>
-          <p>${escapeHtml(m.description || m.overview || m.plot || 'No description available.')}</p>
-          <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-            <button class="btn" id="featPlay">Play</button>
-            <div class="muted">${escapeHtml(m.genres ? m.genres.join(', ') : (m.genre || ''))}</div>
-          </div>
-        </div>
-      `;
-      const featPlay = $('#featPlay');
-      if (featPlay) featPlay.addEventListener('click', () => openPlayer(m.id));
-    }
-
-    // Open player modal and load stream URL
-    async function openPlayer(id) {
-      try {
-        // fetch details
-        const url = `${API_BASE}/movies/${id}`;
-        const data = await apiGet(url);
-        // assume direct stream URL present in data.stream_url or data.video_url
-        const stream = data.stream_url || data.video_url || data.play_url || data.file || (data.data && (data.data.stream_url || data.data.video_url));
-        if (!stream) {
-          alert('Stream URL not found in API response. Check the API movie detail response for a playable URL field (stream_url/video_url).');
+        const detail = await fetchMovieDetail(movieId);
+        const streamUrl = detail.stream_url || detail.video_url || detail.url || detail.play_url;
+        if (!streamUrl) {
+          alert('Streaming URL not found for this movie.');
           return;
         }
-        // set metadata
-        playerMeta.innerHTML = `
-          <div style="display:flex;gap:12px;align-items:center">
-            <img src="${data.poster || data.thumbnail || 'https://via.placeholder.com/90x130?text=No'}" alt="poster" style="width:90px;height:120px;object-fit:cover;border-radius:8px">
-            <div>
-              <div style="font-weight:700">${escapeHtml(data.title || data.name || 'Untitled')}</div>
-              <div class="muted" style="margin-top:6px">${escapeHtml(data.year || data.release_date || '')} • ${escapeHtml(data.rating || '')}</div>
-              <div style="max-width:60ch;margin-top:8px" class="muted">${escapeHtml(data.description || data.overview || '')}</div>
-            </div>
-          </div>
+        videoPlayer.src = streamUrl;
+        videoPlayer.play().catch(e => console.warn('Autoplay prevented', e));
+
+        movieDetails.innerHTML = `
+          <h2>${detail.title || detail.name || 'Untitled'}</h2>
+          <p><strong>Year:</strong> ${detail.year || detail.release_year || ''}</p>
+          <p><strong>Rating:</strong> ${detail.rating || '-'}</p>
+          <p><strong>Description:</strong> ${detail.description || detail.overview || 'No description available.'}</p>
         `;
-        videoEl.src = stream;
-        videoEl.play().catch(()=>{/* autoplay may be blocked; user can press play */});
+
         modal.classList.add('open');
       } catch (err) {
-        console.error('Open player error', err);
-        alert('Failed to open player. See console for details.');
+        console.error('Error opening modal', err);
+        alert('Could not load movie details.');
       }
     }
 
-    // Event handlers
+    closeModalBtn.addEventListener('click', () => {
+      modal.classList.remove('open');
+      videoPlayer.pause();
+      videoPlayer.src = '';
+    });
+
     searchBtn.addEventListener('click', () => {
       const q = searchInput.value.trim();
-      if (!q) { // reload trending
-        grid.innerHTML = ''; page = 1; loadMovies();
-        return;
-      }
-      search(q);
-    });
-
-    searchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') searchBtn.click();
-    });
-
-    loadMoreBtn.addEventListener('click', loadMovies);
-    closeBtn.addEventListener('click', () => {
-      modal.classList.remove('open');
-      videoEl.pause();
-      videoEl.src = '';
-    });
-
-    // click outside to close
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        closeBtn.click();
+      if (q) {
+        performSearch(q);
+      } else {
+        loadMovies(true);
       }
     });
 
-    // initial load
-    (function init(){
-      loadMovies();
-      // small accessibility: focus on search
-      searchInput.focus();
-    })();
+    async function performSearch(query) {
+      if (loading) return;
+      loading = true;
+      movieGrid.innerHTML = '';
+      try {
+        const resp = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
+        if (!resp.ok) throw new Error('Search failed');
+        const json = await resp.json();
+        const movies = Array.isArray(json) ? json : (json.data || []);
+        if (!movies.length) {
+          movieGrid.innerHTML = '<p style="color:#aaa;">No results found.</p>';
+        } else {
+          movies.forEach(m => movieGrid.appendChild(createCard(m)));
+        }
+      } catch (err) {
+        console.error(err);
+        movieGrid.innerHTML = '<p style="color:#f88;">Search error.</p>';
+      } finally {
+        loading = false;
+      }
+    }
 
-    // helpful dev hint: show response preview in dev console when debugging:
-    // window._apiGet = apiGet;
+    loadMoreBtn.addEventListener('click', () => loadMovies());
+
+    // Init
+    loadMovies();
   </script>
 </body>
-  </html>
-  
+</html>
