@@ -7,11 +7,12 @@
 
   <style>
     :root {
-      --primary: #2196f3;
-      --secondary: #0d47a1;
-      --bg-dark: #0a0a0a;
-      --text-light: #f5f5f5;
-      --card-bg: rgba(255, 255, 255, 0.05);
+      --primary: #00bcd4;
+      --secondary: #1a237e;
+      --background: linear-gradient(135deg, #000000, #111111);
+      --card: rgba(255, 255, 255, 0.06);
+      --text: #f5f5f5;
+      --glow: 0 0 15px rgba(0, 188, 212, 0.6);
     }
 
     * {
@@ -22,73 +23,82 @@
     }
 
     body {
-      background: var(--bg-dark);
-      color: var(--text-light);
+      background: var(--background);
+      color: var(--text);
       display: flex;
       flex-direction: column;
       min-height: 100vh;
     }
 
     header {
+      text-align: center;
+      padding: 1.2rem;
       background: var(--secondary);
       color: white;
-      text-align: center;
-      padding: 1rem;
-      font-size: 1.5rem;
-      letter-spacing: 2px;
-      font-weight: bold;
-      text-shadow: 0 0 10px #000;
+      font-size: 1.6rem;
+      letter-spacing: 1.5px;
+      text-shadow: var(--glow);
     }
 
     main {
       flex: 1;
       padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      width: 100%;
+      max-width: 1100px;
+      margin: auto;
     }
 
+    /* Search bar */
     #searchBox {
-      width: 90%;
-      max-width: 500px;
       display: flex;
-      margin-bottom: 1.5rem;
+      justify-content: center;
+      margin-bottom: 2rem;
     }
 
     #query {
       flex: 1;
-      padding: 0.7rem;
+      max-width: 500px;
+      padding: 0.8rem;
       border: none;
       border-radius: 8px 0 0 8px;
       outline: none;
       font-size: 1rem;
+      background: #222;
+      color: #fff;
     }
 
     #searchBtn {
       background: var(--primary);
       border: none;
-      color: white;
-      padding: 0.7rem 1.5rem;
+      padding: 0.8rem 1.2rem;
       border-radius: 0 8px 8px 0;
-      cursor: pointer;
+      color: white;
       font-weight: bold;
+      cursor: pointer;
       transition: 0.3s;
+      box-shadow: var(--glow);
     }
 
     #searchBtn:hover {
-      background: #1976d2;
+      background: #0097a7;
+      transform: scale(1.05);
     }
 
-    #results {
-      width: 100%;
-      max-width: 1000px;
+    /* Section titles */
+    h2 {
+      margin: 1.5rem 0 0.8rem;
+      text-shadow: 0 0 10px var(--primary);
+    }
+
+    /* Movie grid */
+    .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 1rem;
     }
 
     .card {
-      background: var(--card-bg);
+      background: var(--card);
       border-radius: 10px;
       overflow: hidden;
       text-align: center;
@@ -98,6 +108,7 @@
 
     .card:hover {
       transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(0, 188, 212, 0.5);
     }
 
     .card img {
@@ -107,15 +118,15 @@
     }
 
     .card h3 {
-      padding: 0.5rem;
+      padding: 0.6rem;
       font-size: 1rem;
+      color: #fff;
     }
 
+    /* Movie details */
     #movieInfo {
-      width: 90%;
-      max-width: 800px;
-      margin-top: 2rem;
       text-align: center;
+      margin-top: 2rem;
       display: none;
     }
 
@@ -123,47 +134,74 @@
       width: 250px;
       border-radius: 10px;
       margin-bottom: 1rem;
+      box-shadow: var(--glow);
     }
 
-    #sources a {
-      display: block;
+    #movieInfo h3 {
+      margin-bottom: 0.5rem;
+      font-size: 1.3rem;
+      color: var(--primary);
+    }
+
+    #movieInfo p {
+      font-size: 0.9rem;
+      color: #ccc;
+      margin-bottom: 1.5rem;
+    }
+
+    .watch-btn {
+      display: inline-block;
       background: var(--primary);
       color: white;
-      margin: 0.5rem auto;
-      padding: 0.6rem;
-      width: 70%;
-      border-radius: 6px;
       text-decoration: none;
+      padding: 0.8rem 1.2rem;
+      border-radius: 6px;
+      margin: 0.5rem;
+      box-shadow: var(--glow);
       transition: 0.3s;
     }
 
-    #sources a:hover {
-      background: #1565c0;
+    .watch-btn:hover {
+      background: #008ba3;
+      transform: scale(1.05);
     }
 
     footer {
-      background: var(--secondary);
       text-align: center;
       padding: 1rem;
+      background: var(--secondary);
+      color: #ccc;
       font-size: 0.9rem;
-      color: #ddd;
     }
   </style>
 </head>
 <body>
-  <header>🎥 HUNTER STREAM</header>
+  <header>🎬 HUNTER STREAM</header>
 
   <main>
     <div id="searchBox">
-      <input type="text" id="query" placeholder="Search for movies or series..." />
+      <input type="text" id="query" placeholder="Search movies or series..." />
       <button id="searchBtn">Search</button>
     </div>
 
-    <div id="results"></div>
+    <section>
+      <h2>🔥 Trending Movies</h2>
+      <div id="trending" class="grid"></div>
+    </section>
+
+    <section>
+      <h2>📺 TV Shows</h2>
+      <div id="tvshows" class="grid"></div>
+    </section>
+
+    <section>
+      <h2>🔍 Search Results</h2>
+      <div id="results" class="grid"></div>
+    </section>
 
     <div id="movieInfo">
-      <h2 id="title"></h2>
       <img id="poster" src="" alt="Poster" />
+      <h3 id="title"></h3>
       <p id="description"></p>
       <div id="sources"></div>
     </div>
@@ -172,55 +210,35 @@
   <footer>Powered by Obed Tech</footer>
 
   <script>
-    const resultsContainer = document.getElementById('results');
+    const trendingDiv = document.getElementById('trending');
+    const tvshowsDiv = document.getElementById('tvshows');
+    const resultsDiv = document.getElementById('results');
     const movieInfoDiv = document.getElementById('movieInfo');
-    const titleEl = document.getElementById('title');
-    const posterEl = document.getElementById('poster');
-    const descEl = document.getElementById('description');
-    const sourcesEl = document.getElementById('sources');
 
     async function searchMovies(query) {
-      const response = await fetch(
-        `https://movieapi.giftedtech.co.ke/api/search/${encodeURIComponent(query)}`
-      );
+      const response = await fetch(`https://movieapi.giftedtech.co.ke/api/search/${encodeURIComponent(query)}`);
       const data = await response.json();
       return data.results.items || [];
     }
 
     async function getMovieInfo(movieId) {
-      const response = await fetch(
-        `https://movieapi.giftedtech.co.ke/api/info/${movieId}`
-      );
+      const response = await fetch(`https://movieapi.giftedtech.co.ke/api/info/${movieId}`);
       const data = await response.json();
       return data.results.subject;
     }
 
     async function getDownloadSources(movieId) {
-      const response = await fetch(
-        `https://movieapi.giftedtech.co.ke/api/sources/${movieId}`
-      );
+      const response = await fetch(`https://movieapi.giftedtech.co.ke/api/sources/${movieId}`);
       const data = await response.json();
       return data.results.sources || [];
     }
 
-    document.getElementById('searchBtn').addEventListener('click', async () => {
-      const query = document.getElementById('query').value.trim();
-      if (!query) return alert('Enter a movie or series name!');
-      
-      resultsContainer.innerHTML = '<p>Searching...</p>';
-      movieInfoDiv.style.display = 'none';
-      
-      const movies = await searchMovies(query);
-      displayResults(movies);
-    });
-
-    function displayResults(movies) {
-      resultsContainer.innerHTML = '';
+    function displayMovies(container, movies) {
+      container.innerHTML = '';
       if (movies.length === 0) {
-        resultsContainer.innerHTML = '<p>No results found.</p>';
+        container.innerHTML = '<p>No movies found.</p>';
         return;
       }
-
       movies.forEach(movie => {
         const card = document.createElement('div');
         card.classList.add('card');
@@ -228,36 +246,53 @@
           <img src="${movie.image || ''}" alt="${movie.name}">
           <h3>${movie.name}</h3>
         `;
-        card.addEventListener('click', () => showMovieDetails(movie.subjectId));
-        resultsContainer.appendChild(card);
+        card.addEventListener('click', () => showMovie(movie.subjectId));
+        container.appendChild(card);
       });
     }
 
-    async function showMovieDetails(movieId) {
+    async function showMovie(movieId) {
       const info = await getMovieInfo(movieId);
       const sources = await getDownloadSources(movieId);
-
-      titleEl.textContent = info.name;
-      posterEl.src = info.image || '';
-      descEl.textContent = info.description || 'No description available.';
-      sourcesEl.innerHTML = '';
-
+      movieInfoDiv.style.display = 'block';
+      document.getElementById('poster').src = info.image || '';
+      document.getElementById('title').textContent = info.name;
+      document.getElementById('description').textContent = info.description || 'No description available.';
+      const srcDiv = document.getElementById('sources');
+      srcDiv.innerHTML = '';
       if (sources.length === 0) {
-        sourcesEl.innerHTML = '<p>No sources available.</p>';
+        srcDiv.innerHTML = '<p>No sources available.</p>';
       } else {
         sources.forEach(src => {
-          const link = document.createElement('a');
-          link.href = src.url;
-          link.textContent = `Watch (${src.quality || 'Unknown'})`;
-          link.target = '_blank';
-          sourcesEl.appendChild(link);
+          const a = document.createElement('a');
+          a.href = src.url;
+          a.textContent = `Watch (${src.quality || 'Unknown'})`;
+          a.target = '_blank';
+          a.classList.add('watch-btn');
+          srcDiv.appendChild(a);
         });
       }
-
-      movieInfoDiv.style.display = 'block';
       window.scrollTo({ top: movieInfoDiv.offsetTop, behavior: 'smooth' });
     }
+
+    document.getElementById('searchBtn').addEventListener('click', async () => {
+      const q = document.getElementById('query').value.trim();
+      if (!q) return alert('Please enter a search term');
+      resultsDiv.innerHTML = '<p>Searching...</p>';
+      const results = await searchMovies(q);
+      displayMovies(resultsDiv, results);
+    });
+
+    // Load Trending and TV Shows
+    async function init() {
+      const trending = await searchMovies('Action');
+      displayMovies(trendingDiv, trending.slice(0, 8));
+      const tvshows = await searchMovies('Series');
+      displayMovies(tvshowsDiv, tvshows.slice(0, 8));
+    }
+
+    init();
   </script>
 </body>
-  </html>
-        
+        </html>
+  
