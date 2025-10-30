@@ -1,0 +1,10 @@
+version: 1
+
+build:
+  commands:
+    - npm install
+    - npm run build
+
+deploy:
+  directory: public
+  
