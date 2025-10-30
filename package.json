@@ -1,5 +1,10 @@
 {
+  "name": "hunter-stream",
+  "version": "1.0.0",
   "scripts": {
-    "build": "react-scripts build" // or equivalent for your framework
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
   }
 }
