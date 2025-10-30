@@ -207,7 +207,7 @@
         }
 
         async function getVideoSources(movieId) {
-            const response = await fetch(`https://movieapi.giftedtech.co.ke/api/sources/5099284245269335848/${movieId}`);
+            const response = await fetch(`https://movieapi.giftedtech.co.ke/api/sources/${movieId}`);
             return await response.json();
         }
 
