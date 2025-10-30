@@ -235,7 +235,7 @@
       return data.results || {};
     }
 
-    // Show movies or shows by category
+    // Show category (All, Movies, TV Shows)
     async function showCategory(type) {
       const container = document.getElementById("trending");
       container.innerHTML = "<p style='text-align:center'>Loading...</p>";
@@ -246,7 +246,9 @@
 
       const data = await searchMovies(query);
       container.innerHTML = "";
+
       data.forEach(movie => {
+        if (!movie.poster) return;
         const card = document.createElement("div");
         card.classList.add("movie-card");
         card.innerHTML = `
@@ -263,6 +265,7 @@
         "🔥 Trending";
     }
 
+    // Search
     async function performSearch() {
       const query = document.getElementById("searchInput").value.trim();
       if (!query) return;
@@ -272,6 +275,7 @@
       section.style.display = "block";
       container.innerHTML = "";
       results.forEach(movie => {
+        if (!movie.poster) return;
         const card = document.createElement("div");
         card.classList.add("movie-card");
         card.innerHTML = `
@@ -283,6 +287,7 @@
       });
     }
 
+    // Load Movie and Display Video
     async function loadMovie(movieId) {
       const info = await getMovieInfo(movieId);
       const sources = await getDownloadSources(movieId);
@@ -294,14 +299,26 @@
 
       title.textContent = info.title || "Now Playing";
 
-      const source = sources.sources?.[0]?.url;
-      if (source) {
-        video.src = source;
-        downloadBtn.href = source;
+      // ✅ Find a valid video URL
+      let sourceUrl = null;
+      if (sources?.sources && sources.sources.length > 0) {
+        sourceUrl = sources.sources.find(s => s.url && s.url !== "undefined")?.url;
+      }
+      if (!sourceUrl && sources?.streamingUrl) {
+        sourceUrl = sources.streamingUrl;
+      }
+      if (!sourceUrl && sources?.qualities?.length > 0) {
+        sourceUrl = sources.qualities[0].url;
+      }
+
+      if (sourceUrl && sourceUrl !== "undefined") {
+        video.src = sourceUrl;
+        downloadBtn.href = sourceUrl;
         playerSection.style.display = "block";
         window.scrollTo({ top: playerSection.offsetTop, behavior: "smooth" });
       } else {
-        alert("No playable source found for this movie.");
+        alert("No playable video source found for this movie. Try another one.");
+        console.log("Debug API response:", sources);
       }
     }
 
@@ -321,5 +338,4 @@
     showCategory("all");
   </script>
 </body>
-  </html>
-  
+</html>
